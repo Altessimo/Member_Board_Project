@@ -1,2 +1,5 @@
-ASDFD,ASDD,ASDF,ASDAS@DASD.ASDAD,0
-ASDF,ZXCV,QWER,ASDF@QWER.ZXVC,0
+qweqwe,1234,qwe,qwe@qwe,0
+qweqwe,1234,qwe,qwe@qwe,0
+adsf,1234,asdf,racineetc@naver.com,0
+asdf,1234,asdf,asdf@asdf,0
+asdf,1234,qewr,zxcv@4567,0

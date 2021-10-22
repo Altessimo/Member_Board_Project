@@ -1,6 +1,15 @@
 package Controller;
 
 import java.util.ArrayList;
+import java.util.Properties;
+
+import javax.mail.Authenticator;
+import javax.mail.Message;
+import javax.mail.PasswordAuthentication;
+import javax.mail.Session;
+import javax.mail.Transport;
+import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeMessage;
 
 import Database.File;
 import Model.Member;
@@ -47,6 +56,8 @@ public class MemberController {
 		// 객체를 만들어서 접근 or 
 		// File.file = new File();
 		
+		sendmail(member.getEmail(), 3, "");
+		
 		return true; // 회원가입 성공시
 	}
 	
@@ -60,11 +71,14 @@ public class MemberController {
 		return false; // 로그인 실패시 
 	}
 	// 3. 아이디찾기[ 이름 , 이메일 인수로 받아 해당 메일에 아이디 전송 ]
-	public static boolean forgotid( String name , String email ) {
+	public static boolean forgotid(String name, String email) {
 		
 		for(Member member:memberlist) {
 		if(member.getName().equals(name) && member.getEmail().equals(email)) {
-			return true;
+			
+			// 메일 메소드 호출 [  받는사람이메일  , 1(아이디찾기) , 정보(찾은아이디)
+			sendmail(member.getEmail(), 1, member.getId());
+		return true; // 아이디찾기 성공시 
 		}
 		}
 		return false; // 아이디찾기 성공시  
@@ -72,22 +86,85 @@ public class MemberController {
 	// 4. 비밀번호찾기[ 아이디 , 이메일 인수로 받아 해당 메일에 비밀번호 전송 ] 
 	public static boolean forgotpassword( String id , String email ) {
 		for(Member member : memberlist) {
-			if(member.getId().equals(id) && member.getEmail().equals(email))}{
+			if(member.getId().equals(id) && member.getEmail().equals(email)) {
+				sendmail(member.getEmail(), 2, member.getId());
 				return true;
+			}
 		}
 		return false; // 비밀번호찾기 실패시 
 	}
 	// 5. 회원정보[ 아이디를 인수로 받아 해당 아이디의 모든 정보 반환 ] 
-	public Member info( String loginid ) {
+	public Member info(String loginid) {
 		Member member = null;
 		return member;
 	}
 	// 6. 회원정보수정[ 아이디와 수정정보를 받아서 업데이트 처리후 성공여부 반환
-	public boolean info ( String loginid , Member updatemember) {
+	public boolean info (String loginid , Member updatemember) {
 		return true;
 	}
 	// 7. 회원탈퇴 [ 아이디를 인수로 받아 해당 아이디 삭제 후 성공여부 반환
-	public boolean delete( String loginid ) {
+	public boolean delete(String loginid) {
 		return true;
 	}
+	// 8. 메일전송 메소드
+	public static void sendmail(String tomail, int type, String contets) {
+								// tomail : 받는사람 이메일 	// type : 아이디찾기(1),비밀번호찾기(2),가입메일(3)
+								// contents : 메일에 넣을 정보
+		// SMTP : 간이 우편 전송 프로토콜
+			// 프로토콜 : 통신 규약
+		// 1. API 라이브러리 다운[activation.jar , mail.jar]
+		// 2. 현재 프로젝트에 라이브러리 등록
+		
+		// 0. 설정[보내는 사람의 아이디, 비밀번호, 메일회사의 호스트]
+		String fromeemail = "racineetc@naver.com";
+		String fromepassword = "비밀번호";
+		
+		Properties properties = new Properties(); // 설정 컬렉션 map 프레임워크
+		properties.put("mail.smtp.host", "smtp.naver.com"); // host : 호스트 주소
+		properties.put("mail.smtp.port", 587); // post : 호스트의 접속하는 번호
+		properties.put("mail.smtp.arth", true); // arth : 회원 인증
+		
+		// 1. 인증
+		Session session = Session.getDefaultInstance(properties, new Authenticator() {
+			
+			// 익명 구현 객체 : 일회성 객체
+			@Override // 패스워드 인증 메소드
+			protected PasswordAuthentication getPasswordAuthentication() {
+				
+				return new PasswordAuthentication(fromeemail, fromepassword);
+												// 인증할 이메일, 인증할 패스워드
+			}
+		}); // 인증 끝
+		
+		try {
+			// 2. 메일 보내기 
+				// 1. 보내는사람의 인증정보 
+			MimeMessage message = new MimeMessage(session);
+				// 2. 보내는사람 메일주소 설정 
+			message.setFrom(new InternetAddress(fromeemail));
+				// 3. 받는 사람 메일주소 설정
+			message.addRecipient(Message.RecipientType.TO, new InternetAddress(tomail));
+			
+			// * type 구분 
+			if(type==1) {
+				// 4. 메일 제목 
+				message.setSubject("java console(forgot ID)");
+				// 5. 메일 내용
+				message.setText("회원님의 아이디 : " + contets);
+			}
+			if(type==2) {
+				message.setSubject("java console(forgot Password)");
+				message.setText("회원님의 비밀번호 : " + contets);
+			}
+			if(type==3) {
+				message.setSubject("java console(Member Signup)");
+				message.setText("java console에 가입해주셔서 감사합니다");
+			}
+				// 6. 메일 전송 
+			Transport.send(message);
+		}
+		catch (Exception e) {
+			System.err.println("[알림] 메일전송 실패 : 관리자에게 문의" + e);
+		}
 	}
+}
